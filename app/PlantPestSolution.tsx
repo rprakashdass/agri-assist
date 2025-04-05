@@ -4,17 +4,31 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  Button,
+  TouchableOpacity,
   Image,
   ActivityIndicator,
   ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Navbar from '@/src/components/Navbar';
-// import SERVER_URL from '@/config/api';
-const SERVER_URL = "https://e4cc-2401-4900-4dfe-ba36-1873-c589-b3af-1189.ngrok-free.app";
+import { useLanguage } from '@/src/context/LanguageContext'; // Add if you want translations
+
+const SERVER_URL = 'https://23cb-2401-4900-67b3-a11a-8c97-beaa-9d61-93bf.ngrok-free.app';
+
+// Simple Markdown parser for bold text
+const renderMarkdown = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g); // Split by **bold** pattern
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const boldText = part.slice(2, -2); // Remove ** from start and end
+      return <Text key={index} style={styles.boldText}>{boldText}</Text>;
+    }
+    return <Text key={index}>{part}</Text>;
+  });
+};
+
 const PlantPestSolution: React.FC = () => {
+  const { t } = useLanguage(); // Optional: for translations
   const [query, setQuery] = useState<string>('');
   const [pestName, setPestName] = useState<string>('');
   const [pesticide, setPesticide] = useState<string>('');
@@ -37,7 +51,6 @@ const PlantPestSolution: React.FC = () => {
     setAiResponse('');
 
     try {
-      // Retrieve pest data and AI response
       const pestResponse = await fetch(`${SERVER_URL}/retrieve_pest_data`, {
         method: 'POST',
         headers: {
@@ -52,11 +65,11 @@ const PlantPestSolution: React.FC = () => {
       }
 
       const pestData: { pest_name: string; pesticide: string; ai_response: string } = await pestResponse.json();
+      console.log('Server response:', pestData); // Log for debugging
       setPestName(pestData.pest_name);
       setPesticide(pestData.pesticide);
       setAiResponse(pestData.ai_response);
 
-      // Fetch pest image
       const imageUrl = `${SERVER_URL}/get_pest_image/${encodeURIComponent(pestData.pest_name)}`;
       const imageResponse = await fetch(imageUrl);
       if (imageResponse.ok) {
@@ -75,11 +88,13 @@ const PlantPestSolution: React.FC = () => {
 
   return (
     <LinearGradient colors={['#4CAF50', '#2E7D32', '#1B5E20']} style={styles.container}>
-      <Navbar/>
+      <Navbar />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.innerContainer}>
-          <Text style={styles.title}>Plant Pest Solution</Text>
-          <Text style={styles.subtitle}>Enter a pest description to identify it</Text>
+          <Text style={styles.title}>{t('pestSolution') || 'Plant Pest Solution'}</Text>
+          <Text style={styles.subtitle}>
+            Enter a pest name for suggestions on pesticides and pest images.
+          </Text>
 
           <TextInput
             style={styles.input}
@@ -114,10 +129,10 @@ const PlantPestSolution: React.FC = () => {
           {pestName && (
             <View style={styles.resultContainer}>
               <Text style={styles.resultTitle}>Pest Identified:</Text>
-              <Text style={styles.resultText}>{pestName}</Text>
+              <Text style={styles.resultText}>{renderMarkdown(pestName)}</Text>
 
               <Text style={styles.resultTitle}>Recommended Pesticide:</Text>
-              <Text style={styles.resultText}>{pesticide}</Text>
+              <Text style={styles.resultText}>{renderMarkdown(pesticide)}</Text>
 
               {pestImage && (
                 <>
@@ -132,8 +147,8 @@ const PlantPestSolution: React.FC = () => {
 
               {aiResponse && (
                 <>
-                  <Text style={styles.resultTitle}>AI Explanation:</Text>
-                  <Text style={styles.resultText}>{aiResponse}</Text>
+                  <Text style={styles.resultTitle}>{'AI Explanation:'}</Text>
+                  <Text style={styles.resultText}>{renderMarkdown(aiResponse)}</Text>
                 </>
               )}
             </View>
@@ -146,7 +161,7 @@ const PlantPestSolution: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
+  scrollContainer: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', top: 45, overflow: 'hidden' },
   innerContainer: { width: '90%', maxWidth: 400, padding: 20 },
   title: {
     fontSize: 28,
@@ -200,7 +215,16 @@ const styles = StyleSheet.create({
     color: '#1B5E20',
     marginBottom: 5,
   },
-  resultText: { fontSize: 16, color: '#333', marginBottom: 10 },
+  resultText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 10,
+  },
+  boldText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
   pestImage: { width: '100%', height: 200, borderRadius: 10, marginBottom: 10 },
 });
 

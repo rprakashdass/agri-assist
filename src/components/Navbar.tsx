@@ -61,10 +61,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 15,
-    top: 30,
+    top: 45,
     backgroundColor: 'rgba(27, 94, 32, 0.9)',
     borderBottomWidth: 1,
     borderBottomColor: '#2E7D32',
+    overflow: 'hidden'
   },
   navbarTitle: {
     fontSize: 20,
