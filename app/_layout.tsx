@@ -8,6 +8,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="WeatherData" />
         <Stack.Screen name="PlantDiseaseCheckup" />
+        <Stack.Screen name="PlantPestCheckup" />
         <Stack.Screen name="PlantPestSolution" />
       </Stack>
     </LanguageProvider>

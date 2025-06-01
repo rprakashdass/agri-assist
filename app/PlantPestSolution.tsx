@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Navbar from '@/src/components/Navbar';
-import { useLanguage } from '@/src/context/LanguageContext'; // Add if you want translations
+import { useLanguage } from '@/src/context/LanguageContext';
 
 const SERVER_URL = 'https://23cb-2401-4900-67b3-a11a-8c97-beaa-9d61-93bf.ngrok-free.app';
 
@@ -28,7 +28,7 @@ const renderMarkdown = (text: string) => {
 };
 
 const PlantPestSolution: React.FC = () => {
-  const { t } = useLanguage(); // Optional: for translations
+  const { t } = useLanguage();
   const [query, setQuery] = useState<string>('');
   const [pestName, setPestName] = useState<string>('');
   const [pesticide, setPesticide] = useState<string>('');
@@ -65,7 +65,7 @@ const PlantPestSolution: React.FC = () => {
       }
 
       const pestData: { pest_name: string; pesticide: string; ai_response: string } = await pestResponse.json();
-      console.log('Server response:', pestData); // Log for debugging
+      console.log('Server response:', pestData);
       setPestName(pestData.pest_name);
       setPesticide(pestData.pesticide);
       setAiResponse(pestData.ai_response);

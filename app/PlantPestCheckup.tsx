@@ -15,12 +15,13 @@ import Navbar from '@/src/components/Navbar';
 import { useLanguage } from '@/src/context/LanguageContext';
 import SERVER_URL from '@/config/api';
 
-const PlantDiseaseCheckup: React.FC = () => {
+const PlantPestCheckup: React.FC = () => {
   const { t } = useLanguage();
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [diseasePrediction, setDiseasePrediction] = useState<{
+  const [pestPrediction, setPestPrediction] = useState<{
     predicted: string;
     explanation: string;
+    control: string;
   } | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,14 +29,10 @@ const PlantDiseaseCheckup: React.FC = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
 
-  // Request camera permission on mount
   useEffect(() => {
-    if (!permission) {
-      requestPermission();
-    }
+    if (!permission) requestPermission();
   }, [permission, requestPermission]);
 
-  // Pick image from gallery
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -51,20 +48,19 @@ const PlantDiseaseCheckup: React.FC = () => {
 
     if (!result.canceled && result.assets?.[0]?.uri) {
       setImageUri(result.assets[0].uri);
-      setDiseasePrediction(null);
+      setPestPrediction(null);
       setError(null);
       setShowCamera(false);
     }
   };
 
-  // Capture image from camera
   const takePicture = async () => {
     if (cameraRef.current) {
       try {
         const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
         if (photo?.uri) {
           setImageUri(photo.uri);
-          setDiseasePrediction(null);
+          setPestPrediction(null);
           setError(null);
           setShowCamera(false);
         }
@@ -75,7 +71,6 @@ const PlantDiseaseCheckup: React.FC = () => {
     }
   };
 
-  // Submit image for diagnosis
   const handleSubmit = async () => {
     if (!imageUri) {
       setError('Please select or capture an image first.');
@@ -84,22 +79,17 @@ const PlantDiseaseCheckup: React.FC = () => {
 
     setLoading(true);
     setError(null);
-    setDiseasePrediction(null);
+    setPestPrediction(null);
 
     try {
       const formData = new FormData();
       const blob = await fetch(imageUri).then(res => res.blob());
+      formData.append('file', blob, 'pest-image.jpg');
 
-      formData.append('file', blob, 'plant-image.jpg');
-
-      const uploadUrl = `${SERVER_URL}/upload-image`;
-      console.log('Uploading to:', uploadUrl);
+      const uploadUrl = `${SERVER_URL}/upload-pest-image/`;
 
       const uploadResponse = await fetch(uploadUrl, {
         method: 'POST',
-        // headers: {
-        //   'Content-Type': 'multipart/form-data',
-        // },
         body: formData,
       });
 
@@ -109,36 +99,28 @@ const PlantDiseaseCheckup: React.FC = () => {
       }
 
       const data: {
-        plant_disease: {
+        pest_detection: {
           predicted_class: string;
-          class_index: number;
-          probabilities: number[];
           explanation: string;
+          control: string;
         };
       } = await uploadResponse.json();
 
-      setDiseasePrediction({
-        predicted: data.plant_disease.predicted_class,
-        explanation: data.plant_disease.explanation,
+      setPestPrediction({
+        predicted: data.pest_detection.predicted_class,
+        explanation: data.pest_detection.explanation,
+        control: data.pest_detection.control
       });
-
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(`Failed to process the image: ${errorMessage}`);
-      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!permission) {
-    return (
-      <View>
-        <Text>Requesting camera permission...</Text>
-      </View>
-    );
-  }
+  if (!permission) return <View><Text>Requesting camera permission...</Text></View>;
   if (!permission.granted) {
     return (
       <View>
@@ -155,18 +137,13 @@ const PlantDiseaseCheckup: React.FC = () => {
       <Navbar />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.innerContainer}>
-          <Text style={styles.title}>{t('diseaseCheckup')}</Text>
-          <Text style={styles.subtitle}>Scan or upload a plant image for diagnosis</Text>
+          <Text style={styles.title}>{t('pestCheckup') ?? 'Pest Checkup'}</Text>
+          <Text style={styles.subtitle}>Scan or upload a plant image to detect pests</Text>
 
-          {/* Buttons for scanning and uploading */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.imageButton}
-              onPress={() => setShowCamera(true)}
-            >
+            <TouchableOpacity style={styles.imageButton} onPress={() => setShowCamera(true)}>
               <Text style={styles.imageButtonText}>Scan</Text>
             </TouchableOpacity>
-
             <TouchableOpacity style={styles.imageButton} onPress={pickImage}>
               <Text style={styles.imageButtonText}>
                 {imageUri ? 'Change Image' : 'Upload'}
@@ -174,7 +151,6 @@ const PlantDiseaseCheckup: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Camera view */}
           {showCamera && (
             <View style={styles.cameraContainer}>
               <CameraView
@@ -189,7 +165,6 @@ const PlantDiseaseCheckup: React.FC = () => {
             </View>
           )}
 
-          {/* Preview captured/uploaded image */}
           {imageUri && !showCamera && (
             <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="contain" />
           )}
@@ -200,7 +175,7 @@ const PlantDiseaseCheckup: React.FC = () => {
             disabled={loading || !imageUri}
           >
             <Text style={styles.captureButtonText}>
-              {loading ? 'Processing...' : 'Diagnose Plant'}
+              {loading ? 'Processing...' : 'Identify Pest'}
             </Text>
           </TouchableOpacity>
 
@@ -216,12 +191,12 @@ const PlantDiseaseCheckup: React.FC = () => {
             </View>
           )}
 
-          {diseasePrediction && (
+          {pestPrediction && (
             <View style={styles.responseContainer}>
-              <Text style={styles.responseTitle}>Disease Identified:</Text>
-              <Text style={styles.responseText}>{diseasePrediction.predicted}</Text>
+              <Text style={styles.responseTitle}>Pest Identified:</Text>
+              <Text style={styles.responseText}>{pestPrediction.predicted}</Text>
               <Text style={styles.responseTitle}>Explanation:</Text>
-              <Text style={styles.responseText}>{diseasePrediction.explanation}</Text>
+              <Text style={styles.responseText}>{pestPrediction.explanation}</Text>
             </View>
           )}
         </View>
@@ -280,4 +255,4 @@ const styles = StyleSheet.create({
   responseText: { fontSize: 16, color: '#333', marginBottom: 10 },
 });
 
-export default PlantDiseaseCheckup;
+export default PlantPestCheckup;

@@ -16,6 +16,7 @@ const translations: { [key: string]: Translations } = {
     cropData: 'Crop Data',
     weatherInfo: 'Weather Information',
     diseaseCheckup: 'Plant Disease Checkup',
+    pestCheckup: 'Plant Pest Checkup',
     pestSolution: 'Plant Pest Solution',
     yieldCheckup: 'Plant Yield Checkup',
     selectLanguage: 'Select Language',

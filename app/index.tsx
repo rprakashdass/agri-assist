@@ -28,6 +28,11 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.text}>{t('diseaseCheckup')}</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.card} onPress={() => handlePress('PlantPestCheckup')}>
+          <Icon name="bug" size={24} color="#1B5E20" />
+          <Text style={styles.text}>{t('pestCheckup')}</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.card} onPress={() => handlePress('PlantPestSolution')}>
           <Icon name="bug" size={24} color="#1B5E20" />
           <Text style={styles.text}>{t('pestSolution')}</Text>
